@@ -26,14 +26,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     # 包含Application下所有API路由
-    path('api/', include('Application.urls')),
-    
-    # API schema（JSON格式）
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    
-    # Swagger UI
-    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    
-    # Redoc UI
-    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    path('api/', include('Application.urls'))
 ]

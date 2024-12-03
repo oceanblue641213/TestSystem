@@ -54,7 +54,6 @@ INSTALLED_APPS = [
     'Domain',
     'Infrastructure',
     'rest_framework',
-    'django_injector',
     'drf_spectacular',
 ]
 
