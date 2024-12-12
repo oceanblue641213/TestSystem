@@ -1,5 +1,4 @@
 from django.urls import path
-from Application.Controllers import DISCOVERED_APIS
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from Application.Controllers import DISCOVERED_APIS
 
@@ -10,7 +9,6 @@ urlpatterns = [
 ]
 
 # 添加 Swagger UI 視圖
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 urlpatterns += [
     # OpenAPI 規範的 URL
     path('schema/', SpectacularAPIView.as_view(), name='schema'),

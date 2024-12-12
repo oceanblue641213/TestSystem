@@ -1,6 +1,5 @@
 import os
 import importlib
-import inspect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -26,6 +25,10 @@ def auto_discover_apis():
                         apis[key] = wrapped_view
                     else:
                         apis[key] = view  # 其他情況視為普通函數視圖
+            else:
+                for name, value in module.__dict__.items():
+                    if callable(value) and hasattr(value, '_spectacular_view'):
+                        apis[name] = value
     
     return apis
 

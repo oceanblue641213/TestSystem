@@ -1,5 +1,6 @@
 from django.db import models
-import Students.CommandEvents as Event
+from django.core.exceptions import ValidationError
+import Domain.Dtos.StudentDto as dto
 
 class Student(models.Model):
     #region 資料庫Schema
@@ -8,25 +9,37 @@ class Student(models.Model):
         managed = True
 
     # 欄位（Fields）
-    Name = models.CharField(max_length=100)
-    Age = models.IntegerField()
-    Email = models.EmailField(unique=True)
+    _Name = models.CharField(max_length=100)
+    _Age = models.IntegerField()
+    _Email = models.EmailField(unique=True)
     # created_at = models.DateTimeField(auto_now_add=True)
 
     #endregion
 
-    # 建構子（__init__ 方法）
+    #建構子（__init__ 方法）
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-    def Trigger(self, e: Event.StudentCreate):
-        self.name = e.name
-        self.age = e.age
-        self.email = e.email
+    
+    #region 對外事件
+    def create_student(self, e:dto.StudentDto):
+        print("orm建立資料庫連線")
         
+    def update_student(self, e:dto.StudentDto):
+        print("orm建立資料庫連線")
+    #endregion
+    
+    #region 資料驗證邏輯
+    @staticmethod
+    def validate_data(data):
+        # 實作驗證邏輯
+        if not data.get('name') or not data.get('age'):
+            raise ValidationError("name and age are required")
+        if '@' not in data.get('email', ''):
+            raise ValidationError("Invalid email format")
+        return True
+    # endregion
 
     #region 自定義方法（Function）
-
     def get_full_info(self):
         """
         返回學生的完整資訊
@@ -47,7 +60,7 @@ class Student(models.Model):
     #region 屬性(Properties) Get/Set
     @property
     def name(self):
-        return self.Name
+        return self._Name
     
     @name.setter
     def name(self, value):
@@ -55,25 +68,26 @@ class Student(models.Model):
             raise ValueError("Name must be a string")
         if len(value) > 100:
             raise ValueError("Name is too long")
-        self.Name = value  # 同步更新 Model 的 Name 欄位
+        self._Name = value  # 同步更新 Model 的 Name 欄位
     
     @property
     def age(self):
-        return self.Age
+        return self._Age
     
     @age.setter
     def age(self, value):
-        self.Age = value  # 同步更新 Model 的 Age 欄位
+        self._Age = value  # 同步更新 Model 的 Age 欄位
 
     @property
     def email(self):
-        return self.Email
+        return self._Email
     
     @email.setter
     def email(self, value):
-        self.Email = value  # 同步更新 Model 的 Email 欄位
+        self._Email = value  # 同步更新 Model 的 Email 欄位
     #endregion
     
+
 # 創建模型後
 # python manage.py makemigrations
 # python manage.py migrate

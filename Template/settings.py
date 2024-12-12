@@ -144,7 +144,7 @@ REST_FRAMEWORK = {
 # drf-spectacular配置
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Your Project API',
-    'DESCRIPTION': 'API documentation for your Django project',
+    'DESCRIPTION': 'Your project description',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }

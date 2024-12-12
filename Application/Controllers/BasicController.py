@@ -1,19 +1,20 @@
 from django.db import connection
-from django.http import JsonResponse
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+import Infrastructure.Commands.Student.StudentCommand as stuCmd 
+import Domain.Dtos.StudentDto as stdDto
+from Infrastructure.Utils.Decorator import auto_swagger_and_validate
+from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema
 
 class StudentAPIView(APIView):
-    def get(self, request):
-        # with connection.cursor() as cursor:
-            #     cursor.execute("SELECT * FROM GWP")
-            #     result = cursor.fetchone()
-            #     print(f"查詢結果: {result}")
-        return Response({"message": "This is the get Student API"}, status=status.HTTP_200_OK)
-    
-    def post(self, request):
-        return Response({"message": "This is the post Student API"}, status=status.HTTP_200_OK)
+    @extend_schema(request=stdDto.StudentSerializer, methods=['POST'])
+    def post(self, request, *args, **kwargs):
+        try:
+            dto = stdDto.StudentDto(**request.data)
+            stuCmd.StudentCommand.Create_Student(dto)
+            return Response({"message": "Students created successfully"})
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
 
 # 定義 api_views 字典來註冊 API 視圖
 api_views = {
