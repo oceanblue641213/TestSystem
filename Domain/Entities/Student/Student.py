@@ -1,8 +1,9 @@
 from django.db import models
+from Domain.Entities.BaseModel import BaseModel
 from django.core.exceptions import ValidationError
 import Domain.Dtos.StudentDto as dto
 
-class Student(models.Model):
+class Student(BaseModel):
     #region 資料庫Schema
     class Meta:
         db_table = 'Student'
@@ -14,6 +15,13 @@ class Student(models.Model):
     _Email = models.EmailField(unique=True)
     # created_at = models.DateTimeField(auto_now_add=True)
 
+    # 關係欄位
+    # profile = models.OneToOneField(
+    #     'Profile', 
+    #     on_delete=models.CASCADE, 
+    #     null=True, 
+    #     related_name='User' # 使用related_name來方便反向查詢
+    # )
     #endregion
 
     #建構子（__init__ 方法）
@@ -39,6 +47,10 @@ class Student(models.Model):
         return True
     # endregion
 
+    # 可選：自定義 __str__ 方法，用於在 admin 介面或印出物件時顯示
+    def __str__(self):
+        return self.name
+
     #region 自定義方法（Function）
     def get_full_info(self):
         """
@@ -51,10 +63,6 @@ class Student(models.Model):
         檢查學生是否成年
         """
         return self.age >= 18
-
-    # 可選：自定義 __str__ 方法，用於在 admin 介面或印出物件時顯示
-    def __str__(self):
-        return self.name
     # endregion
 
     #region 屬性(Properties) Get/Set

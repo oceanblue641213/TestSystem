@@ -1,10 +1,6 @@
-from Domain.Entities.Students import Student
+from Domain.Entities.Student import Student
+import Domain.Dtos.StudentDto as dto
 
-student = Student(name="Alice", age=20, email="alice@example.com")
-
-# 使用方法
-print(student.get_full_info())
-print(student.is_adult())
-
-def GetStudentAge(id):
-    print()
+class StudentQuery:
+    async def Get_Student(data: dto.StudentSerializer) -> str:
+        return None

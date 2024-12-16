@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 import environ
+from datetime import timedelta
 
 # 初始化 django-environ
 env = environ.Env()
@@ -46,15 +47,21 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
+    'django.contrib.sites',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'allauth',
+    'allauth.account',
     'Application',
     'Domain',
     'Infrastructure',
     'rest_framework',
     'drf_spectacular',
+    # 'python-json-logger',
+    'django_elasticsearch_dsl',
+    'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
@@ -65,6 +72,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
+    'Infrastructure.Middleware.LoggingMiddleware.RequestLogMiddleware',
 ]
 
 ROOT_URLCONF = 'Template.urls'
@@ -85,7 +94,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'Template.wsgi.application'
+ASGI_APPLICATION = 'Template.asgi.application'
 
 
 # Database
@@ -139,6 +148,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'EXCEPTION_HANDLER': 'Infrastructure.Middleware.ExceptionMiddleware.custom_exception_handler',
 }
 
 # drf-spectacular配置
@@ -148,3 +161,81 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'json': {
+            '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+            'format': '%(asctime)s %(levelname)s %(name)s %(message)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        },
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'django.log',
+            'formatter': 'json'
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'elasticsearch': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+        },
+        # 你的应用日志配置
+        'your_app_name': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
+        }
+    }
+}
+
+# django-elasticsearch-dsl 的额外配置
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts': 'localhost:9200'
+    },
+}
+
+# JWT配置
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+}
+
+# 站點ID配置
+SITE_ID = 1
+
+# 默認後端
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+# AllAuth配置
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+
+'''
+異步API需要ASGI服務器（如Uvicorn）而不是傳統的WSGI服務器
+確保所有可能的阻塞操作都被轉換為非阻塞的異步版本
+對於不支持異步的第三方庫，可能需要使用asyncio.to_thread()來避免阻塞
+'''
