@@ -4,21 +4,24 @@ from django.utils import timezone
 from Domain.Entities.BaseModel import BaseModel
 from django.core.exceptions import ValidationError
 from dataclasses import dataclass, field
+from Infrastructure.Services.UserService import UserService
 from .UserFileService import UserFileService
+from django.contrib.auth.models import AbstractUser
+from django.contrib.auth import authenticate, login
 
 @dataclass
-class User(BaseModel):
+class User(AbstractUser, BaseModel):
     # 建構子（__init__ 方法）
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
     
     #region 私有欄位，但仍然可以映射到資料庫
     _Id: uuid.UUID = field(default_factory=uuid.uuid4)
-    _CreateDate: timezone.datetime = field(default_factory=timezone.now)
+    _Name: str = field(default='')
+    _Age: int = field(default=0)
     _Status: bool = field(default=True)
     _EmissionValue: float = field(default=0.0)
-    _Age: int = field(default=0)
-    _Name: str = field(default='')
+    _CreateDate: timezone.datetime = field(default_factory=timezone.now)
     _AvatarPath: str = field(default='')
     _DocumentPath: str = field(default='')
     #endregion
@@ -62,18 +65,29 @@ class User(BaseModel):
     #endregion
     
     #region 對外事件
-    def TriggerCreate(self, name: str, age: int):
+    def TriggerCreate(self, name: str, account: str, password: str, age: int):
         # 創建用戶的主邏輯
         self._Name = name
         self._Age = age
+        user = UserService.register_user(account, password)
+        # 後續處理
+        
         self.save()
     
-    def TriggerUpdate(self, name: str = None, age: int = None, avatar_file = None, document_file = None, **kwargs):  # **kwargs 表示任意數量的關鍵字參數，建議將必填資料放在前面
+    def TriggerUpdate(self, account: str, password: str, name: str = None, age: int = None, avatar_file = None, document_file = None, **kwargs):  # **kwargs 表示任意數量的關鍵字參數，建議將必填資料放在前面
         # 更新用戶的主邏輯
         if name:
             self._Name = name
         if age is not None:
             self._Age = age
+        
+        user = UserService.login_user(account, password)
+        if user:
+            # 登入成功邏輯
+            ...
+        else:
+            # 登入失敗
+            ...
         
         # 處理頭像上傳
         if avatar_file:

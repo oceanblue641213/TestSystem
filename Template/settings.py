@@ -52,8 +52,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'allauth',
-    'allauth.account',
     'Application',
     'Domain',
     'Infrastructure',
@@ -62,6 +60,7 @@ INSTALLED_APPS = [
     # 'python-json-logger',
     'django_elasticsearch_dsl',
     'rest_framework_simplejwt',
+    'cryptography',
 ]
 
 MIDDLEWARE = [
@@ -72,7 +71,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'allauth.account.middleware.AccountMiddleware',
     'Infrastructure.Middleware.LoggingMiddleware.RequestLogMiddleware',
 ]
 
@@ -226,13 +224,7 @@ SITE_ID = 1
 # 默認後端
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
-    'allauth.account.auth_backends.AuthenticationBackend',
 ]
-
-# AllAuth配置
-ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
 
 '''
 異步API需要ASGI服務器（如Uvicorn）而不是傳統的WSGI服務器

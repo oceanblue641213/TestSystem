@@ -1,100 +1,121 @@
+import uuid
 from django.db import models
+from django.utils import timezone
 from Domain.Entities.BaseModel import BaseModel
 from django.core.exceptions import ValidationError
-import Domain.Dtos.StudentDto as dto
+from dataclasses import dataclass, field
 
 class Student(BaseModel):
-    #region 資料庫Schema
+    # 建構子（__init__ 方法）
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    
+    #region 私有欄位，但仍然可以映射到資料庫
+    _Id: uuid.UUID = field(default_factory=uuid.uuid4)
+    _Name: str = field(default='')
+    _Age: int = field(default=0)
+    _Status: bool = field(default=True)
+    _EmissionValue: float = field(default=0.0)
+    _CreateDate: timezone.datetime = field(default_factory=timezone.now)
+    _AvatarPath: str = field(default='')
+    _DocumentPath: str = field(default='')
+    #endregion
+    
+    #region Django ORM 必須的欄位映射
     class Meta:
         db_table = 'Student'
         managed = True
 
     # 欄位（Fields）
-    _Name = models.CharField(max_length=100)
-    _Age = models.IntegerField()
-    _Email = models.EmailField(unique=True)
-    # created_at = models.DateTimeField(auto_now_add=True)
-
-    # 關係欄位
-    # profile = models.OneToOneField(
-    #     'Profile', 
-    #     on_delete=models.CASCADE, 
-    #     null=True, 
-    #     related_name='User' # 使用related_name來方便反向查詢
-    # )
-    #endregion
-
-    #建構子（__init__ 方法）
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    Id = models.UUIDField(
+        primary_key=True, 
+        default=uuid.uuid4, 
+        editable=False
+        )
+    CreateDate = models.DateTimeField(
+        default=timezone.now
+        )
+    Status = models.BooleanField(
+        default=True
+        )
+    EmissionValue = models.DecimalField(
+        max_digits=12, 
+        decimal_places=6
+        )
+    Name = models.CharField(
+        max_length=100
+        )
+    Age = models.IntegerField(
+        default=0
+        )
+    AvatarPath = models.CharField(
+        max_length=255, blank=True
+        )
+    DocumentPath = models.CharField(
+        max_length=255, blank=True
+        )
     
-    #region 對外事件
-    def create_student(self, e:dto.StudentDto):
-        print("orm建立資料庫連線")
-        
-    def update_student(self, e:dto.StudentDto):
-        print("orm建立資料庫連線")
     #endregion
-    
-    #region 資料驗證邏輯
-    @staticmethod
-    def validate_data(data):
-        # 實作驗證邏輯
-        if not data.get('name') or not data.get('age'):
-            raise ValidationError("name and age are required")
-        if '@' not in data.get('email', ''):
-            raise ValidationError("Invalid email format")
-        return True
-    # endregion
 
     #region Dunder Methods
     # 可選：自定義 __str__ 方法，用於在 admin 介面或印出物件時顯示
     def __str__(self):
-        return self.name
-    #endregion
-
-    #region 自定義方法（Function）
-    def get_full_info(self):
-        """
-        返回學生的完整資訊
-        """
-        return f"Name: {self.name}, Age: {self.age}, Email: {self.email}"
-
-    def is_adult(self):
-        """
-        檢查學生是否成年
-        """
-        return self.age >= 18
-    # endregion
-
-    #region 屬性(Properties) Get/Set
-    @property
-    def name(self):
         return self._Name
+    #endregion
     
-    @name.setter
-    def name(self, value):
-        if not isinstance(value, str):
-            raise ValueError("Name must be a string")
-        if len(value) > 100:
-            raise ValueError("Name is too long")
-        self._Name = value  # 同步更新 Model 的 Name 欄位
+    #region 對外事件
+    def TriggerCreate(self, name: str, age: int):
+        # 創建學生的主邏輯
+        self._Name = name
+        self._Age = age
+        self.save()
     
-    @property
-    def age(self):
-        return self._Age
+    def TriggerUpdate(self, name: str = None, age: int = None, **kwargs):  # **kwargs 表示任意數量的關鍵字參數，建議將必填資料放在前面
+        # 更新學生的主邏輯
+        if name:
+            self._Name = name
+        if age is not None:
+            self._Age = age
+        
+        # # 處理頭像上傳
+        # if avatar_file:
+        #     avatar_path = UserFileService.handle_user_avatar_upload(
+        #         self, avatar_file
+        #     )
+        #     self._AvatarPath = avatar_path
     
-    @age.setter
-    def age(self, value):
-        self._Age = value  # 同步更新 Model 的 Age 欄位
-
-    @property
-    def email(self):
-        return self._Email
+        # # 處理文件上傳
+        # if document_file:
+        #     document_path = UserFileService.handle_user_document_upload(
+        #         self, document_file
+        #     )
+        #     self._DocumentPath = document_path
+            
+        #     # 如果還有其他未處理的參數
+        #     for key, value in kwargs.items():
+        #         setattr(self, key, value)
+        
+        self.save()
     
-    @email.setter
-    def email(self, value):
-        self._Email = value  # 同步更新 Model 的 Email 欄位
+    #endregion
+    
+    #region 驗證事件
+    def _validate_create(self, name: str, age: int) -> bool:  # 驗證返回值建議都傳 bool
+        # 創建學生的特定驗證邏輯
+        if len(name) < 3:
+            print("name too short")
+            return False
+        if not age:
+            print("age is required")
+            return False
+        return True
+    
+    def _validate_update(self, **kwargs) -> bool:
+        # 更新學生的特定驗證邏輯
+        if 'name' in kwargs and len(kwargs['name']) < 3:
+            print("name too short")
+            return False
+        return True
     #endregion
     
 
