@@ -47,9 +47,11 @@ class Student(BaseModel):
         return True
     # endregion
 
+    #region Dunder Methods
     # 可選：自定義 __str__ 方法，用於在 admin 介面或印出物件時顯示
     def __str__(self):
         return self.name
+    #endregion
 
     #region 自定義方法（Function）
     def get_full_info(self):
