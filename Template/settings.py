@@ -14,6 +14,9 @@ from pathlib import Path
 import os
 import environ
 from datetime import timedelta
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # 初始化 django-environ
 env = environ.Env()
@@ -61,6 +64,7 @@ INSTALLED_APPS = [
     'django_elasticsearch_dsl',
     'rest_framework_simplejwt',
     'cryptography',
+    'Application.apps.MyAppConfig',
 ]
 
 MIDDLEWARE = [
@@ -225,6 +229,13 @@ SITE_ID = 1
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
+
+# MongoDB 配置
+MONGODB_HOST = os.getenv('MONGODB_HOST', 'localhost')
+MONGODB_PORT = int(os.getenv('MONGODB_PORT', 27017))
+MONGODB_DB = os.getenv('MONGODB_DB', 'your_database')
+MONGODB_USERNAME = os.getenv('MONGODB_USERNAME', '')
+MONGODB_PASSWORD = os.getenv('MONGODB_PASSWORD', '')
 
 '''
 異步API需要ASGI服務器（如Uvicorn）而不是傳統的WSGI服務器
