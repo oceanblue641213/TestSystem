@@ -26,7 +26,7 @@ django_env = os.getenv('DJANGO_ENV', 'development')  # 默認為 'development'
 if django_env == 'production':
     env.read_env('.env.prod')  # 生產環境使用 .env.prod
 else:
-    env.read_env('.env.local')  # 開發環境使用 .env.local
+    env.read_env('.env')  # 開發環境使用 .env.local
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -60,11 +60,8 @@ INSTALLED_APPS = [
     'Infrastructure',
     'rest_framework',
     'drf_spectacular',
-    # 'python-json-logger',
-    'django_elasticsearch_dsl',
     'rest_framework_simplejwt',
     'cryptography',
-    'Application.apps.MyAppConfig',
 ]
 
 MIDDLEWARE = [
@@ -75,7 +72,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'Infrastructure.Middleware.LoggingMiddleware.RequestLogMiddleware',
+    'Infrastructure.middleware.loggingMiddleware.RequestLogMiddleware',
 ]
 
 ROOT_URLCONF = 'Template.urls'
@@ -103,7 +100,14 @@ ASGI_APPLICATION = 'Template.asgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': env.db()
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'test',
+        'USER': 'root',
+        'PASSWORD': '12345678',
+        'HOST': 'localhost',
+        'PORT': '3306',
+    }
 }
 
 
@@ -153,7 +157,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
-    'EXCEPTION_HANDLER': 'Infrastructure.Middleware.ExceptionMiddleware.custom_exception_handler',
+    'EXCEPTION_HANDLER': 'Infrastructure.middleware.exceptionMiddleware.custom_exception_handler',
 }
 
 # drf-spectacular配置
@@ -162,58 +166,6 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'Your project description',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
-}
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
-        },
-        'json': {
-            '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
-            'format': '%(asctime)s %(levelname)s %(name)s %(message)s'
-        },
-    },
-    'handlers': {
-        'console': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose'
-        },
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': 'django.log',
-            'formatter': 'json'
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
-            'propagate': True,
-        },
-        'elasticsearch': {
-            'handlers': ['console'],
-            'level': 'WARNING',
-        },
-        # 你的应用日志配置
-        'your_app_name': {
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
-            'propagate': True,
-        }
-    }
-}
-
-# django-elasticsearch-dsl 的额外配置
-ELASTICSEARCH_DSL = {
-    'default': {
-        'hosts': 'localhost:9200'
-    },
 }
 
 # JWT配置
@@ -229,6 +181,29 @@ SITE_ID = 1
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'json': {
+            '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+            'format': '%(timestamp)s %(level)s %(name)s %(message)s'
+        }
+    },
+    'handlers': {
+        'json': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'json'
+        }
+    },
+    'loggers': {
+        '': {
+            'handlers': ['json'],
+            'level': 'DEBUG'
+        }
+    }
+}
 
 # MongoDB 配置
 MONGODB_HOST = os.getenv('MONGODB_HOST', 'localhost')

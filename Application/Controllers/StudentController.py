@@ -1,15 +1,15 @@
 import logging
 import asyncio
-import Infrastructure.Commands.Student.StudentCommand as cmd
-import Infrastructure.Queries.Student.StudentQuery as qry
-import Domain.Dtos.StudentDto as dto
+import Infrastructure.commands.student.studentCommand as cmd
+import Infrastructure.queries.student.studentQuery as qry
+import Domain.dtos.studentDto as dto
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from Infrastructure.Utils.Response import ApiResponse
+from Infrastructure.utils.response import ApiResponse
 
-logger = logging.getLogger('your_app')
+# logger = logging.getLogger('your_app')
 
 class StudentAPIView(APIView):
     
@@ -20,20 +20,7 @@ class StudentAPIView(APIView):
     @extend_schema(request=dto.StudentSerializer, methods=['GET'])
     async def get(self, request, *args, **kwargs):
         # 一般日誌
-        logger.warning("SPENCER IS HERE")
-        # logger.info('使用者登入', extra={
-        #     'user_id': 'spencer',
-        #     'ip_address': request.META.get('REMOTE_ADDR')
-        # })
-
-        # 錯誤日誌
-        try:
-            # 某些可能出錯的操作
-            pass
-        except Exception as e:
-            logger.error('操作失敗', exc_info=True, extra={
-                'user_id': request.user.id
-            })
+        # logger.warning("SPENCER IS HERE")
         try:
             dto = dto.StudentDto(**request.data)
             await qry.StudentQuery.Get_Student(dto)

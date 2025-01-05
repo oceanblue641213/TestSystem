@@ -1,5 +1,5 @@
-from Domain.Entities.Student import Student
-import Domain.Dtos.StudentDto as dto
+from Domain.entities.student.student import Student
+import Domain.dtos.studentDto as dto
 
 class StudentQuery:
     async def Get_Student(data: dto.StudentSerializer) -> str:

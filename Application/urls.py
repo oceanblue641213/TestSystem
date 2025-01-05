@@ -1,6 +1,6 @@
 from django.urls import path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-from Application.Controllers import DISCOVERED_APIS
+from Application.controllers import DISCOVERED_APIS
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,

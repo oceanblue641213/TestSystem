@@ -1,7 +1,7 @@
 import uuid
 from django.db import models
 from django.utils import timezone
-from Domain.Entities.BaseModel import BaseModel
+from Domain.entities.baseModel import BaseModel
 from django.core.exceptions import ValidationError
 from dataclasses import dataclass, field
 

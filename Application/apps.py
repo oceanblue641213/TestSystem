@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 from .config import service_registry, app_config
-from ..Infrastructure.persistence import MongoDBRepository
+from Infrastructure.persistence.mongodb_repository import MongoDBRepository
 
 class MyAppConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
@@ -18,6 +18,6 @@ class MyAppConfig(AppConfig):
         # mysql_client = config.get_mysql_client()
         # redis_client = config.get_redis_client()
         # 創建 repository 實例
-        mongo = MongoDBRepository(mongo_client)
+        mongo = MongoDBRepository()
         # 註冊服務
         service_registry.ServiceRegistry.register("mongo", mongo)

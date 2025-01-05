@@ -1,7 +1,7 @@
 from django.db import models
 from typing import Callable, Any
 from functools import wraps
-from Domain.Enums.ValidationEventEnum import ValidationEvent
+from Domain.enums.validationEventEnum import ValidationEvent
 
 # 通用模型基類的元類
 class ValidationModelMeta(type(models.Model)):

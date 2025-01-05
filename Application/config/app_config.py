@@ -2,7 +2,6 @@ import os
 from typing import Optional
 from functools import lru_cache
 import logging
-from django.conf import settings
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from dotenv import load_dotenv
@@ -29,8 +28,8 @@ class ServiceConfig:
     def initialize_services(self):
         # 初始化各種服務
         self.mongo_client = None
-        self.redis_client = None
-        self.mysql_client = None
+        # self.redis_client = None
+        # self.mysql_client = None
         # 其他服務初始化...
 
     @lru_cache
@@ -55,25 +54,25 @@ class ServiceConfig:
                 logger.error(f"MongoDB Connection failed: {str(e)}")
                 raise
 
-        return self.mongo_client
+        return self._mongo_client
         
-    @lru_cache
-    def get_redis_client(self):
-        if not self.redis_client:
-            # 初始化 redis 連接
-            pass
-        return self.redis_client
+    # @lru_cache
+    # def get_redis_client(self):
+    #     if not self.redis_client:
+    #         # 初始化 redis 連接
+    #         pass
+    #     return self.redis_client
         
-    @lru_cache
-    def get_mysql_client(self):
-        if not self.mysql_client:
-            # 初始化 mysql 連接
-            pass
-        return self.mysql_client
+    # @lru_cache
+    # def get_mysql_client(self):
+    #     if not self.mysql_client:
+    #         # 初始化 mysql 連接
+    #         pass
+    #     return self.mysql_client
     
     def get_mongo_database(self, db_name: str = None):
         """
         獲取指定的MongoDB數據庫實例
         """
         client = self.get_mongo_client()
-        return client[db_name or settings.MONGODB_DB]
+        return client[db_name]

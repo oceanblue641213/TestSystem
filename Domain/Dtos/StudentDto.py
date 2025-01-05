@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from Domain.Entities.GenericSerializer import GenericSerializer
+from Domain.entities.genericSerializer import GenericSerializer
 from rest_framework import serializers
 
 @dataclass

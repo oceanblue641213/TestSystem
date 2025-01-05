@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from Domain.Exceptions.Exceptions import ResourceNotFoundException
+from Domain.exceptions.exceptions import ResourceNotFoundException
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate, login
 
