@@ -1,15 +1,25 @@
 import os
 from typing import Optional
 from functools import lru_cache
+import redis
 import logging
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from dotenv import load_dotenv
+from infrastructure.services.i18nService import I18nService
+from infrastructure.services.mysqlService import MySQLService
+from infrastructure.services.mongodbService import MongoDBService
+from django.db import connection
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 
 load_dotenv()
+mysql_url = os.getenv("MYSQL_URL")
 mongodb_url = os.getenv("MONGODB_URL")
+redis_host = os.getenv("REDIS_HOST")
+redis_port = os.getenv("REDIS_PORT")
+redis_password = os.getenv("REDIS_PASSWORD")
+translate_collection = os.getenv("TRANSLATE_COLLECTION")
 
 class ServiceConfig:
     _instance: Optional['ServiceConfig'] = None
@@ -28,8 +38,9 @@ class ServiceConfig:
     def initialize_services(self):
         # 初始化各種服務
         self.mongo_client = None
-        # self.redis_client = None
-        # self.mysql_client = None
+        self.redis_client = None
+        self.i18n_client = None
+        self.mysql_service = None
         # 其他服務初始化...
 
     @lru_cache
@@ -41,34 +52,66 @@ class ServiceConfig:
         if not self.mongo_client:
             try:
                 # 創建客戶端連接
-                self._mongo_client = MongoClient(
-                    mongodb_url,
-                    serverSelectionTimeoutMS=5000  # 5秒超時
-                )
-                
-                # 測試連接
-                self._mongo_client.admin.command('ping')
-                logger.info("Successfully connected to MongoDB")
+                self.mongo_service = MongoDBService()
+                self.mongo_service.connect(mongodb_url)
+                # 將 mongo_service 的 client 賦值給 mongo_client
+                self.mongo_client = self.mongo_service.client
+                # logger.info("Successfully connected to MongoDB")
                 
             except ConnectionFailure as e:
-                logger.error(f"MongoDB Connection failed: {str(e)}")
+                # logger.error(f"MongoDB Connection failed: {str(e)}")
                 raise
 
-        return self._mongo_client
+        return self.mongo_client
         
-    # @lru_cache
-    # def get_redis_client(self):
-    #     if not self.redis_client:
-    #         # 初始化 redis 連接
-    #         pass
-    #     return self.redis_client
+    @lru_cache
+    def get_redis_client(self):
+        if not self.redis_client:
+            try:
+                self.redis_client = redis.Redis(
+                    host=redis_host,
+                    port=redis_port,
+                    password=redis_password,
+                    db=0,
+                    decode_responses=True
+                )
+                # 嘗試連接 Redis
+                self.redis_client.ping()
+                print("Redis connection successful")
+            except Exception as e:
+                print(f"Error connecting to Redis: {e}")
+                raise
+            
+        return self.redis_client
+    
+    def get_i18n_client(self):
+        if not self.i18n_client:
+            try:
+                # 初始化 i18n 連接
+                self.i18n_client = I18nService(
+                mongodb_collection=self.mongo_client[translate_collection],
+                redis_client=self.redis_client,
+                default_lang='en',
+                cache_ttl=3600
+                )
+            except Exception as e:
+                print(f"Error connecting to i18n: {e}")
+                raise
+            
+        return self.i18n_client
+        #mysql_url
+    @lru_cache
+    def get_mysql_client(self):
+        try:
+            # 測試連線
+            self.mysql_service = MySQLService()
+            self.mysql_service.connect()
+            print("MySQL connection successful")
+        except Exception as e:
+            print(f"Error connecting to MySQL: {e}")
+            raise
         
-    # @lru_cache
-    # def get_mysql_client(self):
-    #     if not self.mysql_client:
-    #         # 初始化 mysql 連接
-    #         pass
-    #     return self.mysql_client
+        return connection
     
     def get_mongo_database(self, db_name: str = None):
         """
@@ -76,3 +119,21 @@ class ServiceConfig:
         """
         client = self.get_mongo_client()
         return client[db_name]
+
+    def cleanup(self):
+        """清理所有資源"""
+        if self.mongo_service:
+            self.mongo_service.close()
+        if self.mysql_service:
+            self.mysql_service.close()
+
+    def check_connections(self):
+        """檢查所有連線狀態"""
+        mongo_ok = self.mongo_service.check_connection()
+        mysql_ok = self.mysql_service.check_connection()
+        
+        # 如果有連線斷開，嘗試重新連線
+        if not mongo_ok:
+            self.mongo_service.reconnect()
+        if not mysql_ok:
+            self.mysql_service.reconnect()

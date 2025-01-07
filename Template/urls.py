@@ -26,5 +26,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     # 包含Application下所有API路由
-    path('api/', include('Application.urls'))
+    path('api/', include('application.urls'))
 ]

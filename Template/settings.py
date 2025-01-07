@@ -12,14 +12,17 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+import logging
 import environ
 from datetime import timedelta
 from dotenv import load_dotenv
+import dj_database_url
 
 load_dotenv()
 
 # 初始化 django-environ
 env = environ.Env()
+mysql_url = os.getenv("MYSQL_URL")
 
 django_env = os.getenv('DJANGO_ENV', 'development')  # 默認為 'development'
 # 根據 DJANGO_ENV 加載不同的 .env 檔案
@@ -55,9 +58,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'Application',
-    'Domain',
-    'Infrastructure',
+    'application',
+    'domain',
+    'infrastructure',
     'rest_framework',
     'drf_spectacular',
     'rest_framework_simplejwt',
@@ -72,7 +75,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'Infrastructure.middleware.loggingMiddleware.RequestLogMiddleware',
+    'infrastructure.middleware.loggingMiddleware.RequestLogMiddleware',
 ]
 
 ROOT_URLCONF = 'Template.urls'
@@ -100,14 +103,10 @@ ASGI_APPLICATION = 'Template.asgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'test',
-        'USER': 'root',
-        'PASSWORD': '12345678',
-        'HOST': 'localhost',
-        'PORT': '3306',
-    }
+    'default': dj_database_url.parse(
+        mysql_url,
+        conn_max_age=600
+    )
 }
 
 
@@ -155,9 +154,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'infrastructure.utils.authentication.JWTAuthentication',
     ],
-    'EXCEPTION_HANDLER': 'Infrastructure.middleware.exceptionMiddleware.custom_exception_handler',
+    'EXCEPTION_HANDLER': 'infrastructure.middleware.exceptionMiddleware.custom_exception_handler',
 }
 
 # drf-spectacular配置
@@ -181,6 +180,14 @@ SITE_ID = 1
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
+
+# 配置根日誌記錄器
+logging.basicConfig(level=logging.WARNING)
+
+# 特別設置 pymongo 相關的日誌
+logging.getLogger('pymongo.topology').setLevel(logging.WARNING)
+logging.getLogger('pymongo.connection').setLevel(logging.WARNING)
+logging.getLogger('pymongo').setLevel(logging.WARNING)
 
 LOGGING = {
     'version': 1,

@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from infrastructure.utils.authentication import JWTAuthentication
 import domain.entities.user as User
 from domain.dtos.loginDto import LoginDto as dto
 from infrastructure.utils.response import ApiResponse
@@ -18,6 +19,8 @@ from infrastructure.utils.response import ApiResponse
 class LoginAPIView(APIView):
     @api_view(['POST'])
     @permission_classes([AllowAny])
+    # @authentication_classes([JWTAuthentication])
+    # @permission_classes([IsAuthenticated])
     @extend_schema(request=dto, methods=['POST'])
     async def post(self, request, *args, **kwargs):
         try:

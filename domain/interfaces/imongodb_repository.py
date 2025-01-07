@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, List
 
-class iMongoDB(ABC):
+class iMongoDBRepository(ABC):
     @abstractmethod
     def find_by_id(self, collection: str, id: str) -> Any:
         pass
