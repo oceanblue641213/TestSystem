@@ -1,75 +1,59 @@
 import logging
-import asyncio
-from drf_spectacular.utils import extend_schema
-from rest_framework.views import APIView
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from infrastructure.utils.authentication import JWTAuthentication
-import domain.dtos.studentDto as dto
-import infrastructure.commands.student.studentCommand as cmd
-import infrastructure.queries.student.studentQuery as qry
-from infrastructure.utils.response import ApiResponse
+from application.core.router import CustomRouter
+from application.core.decorators import remove_self_parameter
+from ninja import Router
+from django.http import HttpRequest
+from domain.dtos.studentDto import StudentDto
+from typing import Any
+from application.schemas import ApiResponse
 from application.config.service_registry import ServiceRegistry
 from domain.entities.EF.EF import EF as EF
+from ninja.security import HttpBearer
+from application.auth.jwt_auth import JWTAuth
 
-logger = logging.getLogger('your_app')
+router = Router(tags=["students"])
+logger = logging.getLogger('application')
 
-class StudentAPIView(APIView):
-  def __init__(self):
+class StudentController:
+    def __init__(self):
         self.mysql_repo = ServiceRegistry.get_service("mysql")
-  permission_classes = [AllowAny]
-    
-  # 取得學生資料
-  # 不需要授權的API
 
-  # @authentication_classes([JWTAuthentication])
-  # @permission_classes([IsAuthenticated])
-  # @extend_schema(request=dto.StudentSerializer, methods=['GET'])
-  def get(self, request, *args, **kwargs):
-    try:
-      aaa = self.mysql_repo.find_by_id(EF, 'GHG00001')
-      # dto = dto.StudentDto(**request.data)
-      # await qry.StudentQuery.Get_Student(dto)
-      return ApiResponse.success()
-    except Exception as e:
-      return ApiResponse.error(message=str(e))
-  
-  # # 創建學生
-  # # 需要授權的API
-  # @permission_classes([IsAuthenticated])
-  # @extend_schema(request=dto.StudentSerializer, methods=['POST'])
-  # async def post(self, request, *args, **kwargs):
-  #     try:
-  #         dto = dto.StudentDto(**request.data)
-  #         await cmd.StudentCommand.Create_Student(dto)
-  #         return ApiResponse.success()
-  #     except Exception as e:
-  #         return ApiResponse.error(message=str(e))
-  
-  # # 更新學生
-  # @extend_schema(request=dto.StudentSerializer, methods=['PUT'])
-  # async def put(self, request, *args, **kwargs):
-  #     try:
-  #         dto = dto.StudentDto(**request.data)
-  #         await cmd.StudentCommand.Update_Student(dto)
-  #         return ApiResponse.success()
-  #     except Exception as e:
-  #         return ApiResponse.error(message=str(e))
-  
-  # # 刪除學生
-  # @extend_schema(request=dto.StudentSerializer, methods=['DELETE'])
-  # async def delete(self, request, *args, **kwargs):
-  #     try:
-  #         dto = dto.StudentDto(**request.data)
-  #         await cmd.StudentCommand.Delete_Student(dto)
-  #         return ApiResponse.success()
-  #     except Exception as e:
-  #         return ApiResponse.error(message=str(e))
+    @remove_self_parameter
+    @router.get("/", summary="Get all students", response=ApiResponse[str])
+    async def get_student(self, request: HttpRequest) -> Any:
+        try:
+            # 假設 mysql_repo 已經支援非同步操作
+            student = await self.mysql_repo.find_all_async(EF)
+            return ApiResponse(success=True, data="123")
+        except Exception as e:
+            logger.error(f"Error in get_students: {str(e)}")
+            return ApiResponse(success=False, data=str(e))
 
-# 定義 api_views 字典來註冊 API 視圖
-api_views = {
-    'student': StudentAPIView.as_view()
-}
+    # @remove_self_parameter
+    @router.get("/{student_id}", summary="Get student by ID", auth=JWTAuth())
+    async def get_student_by_id(self, request: HttpRequest, student_id: str) -> Any:
+        try:
+            student = await self.mysql_repo.find_by_id_async(EF, student_id)
+            if not student:
+                return ApiResponse.error(message="Student not found", status=404)
+            return ApiResponse(success=True, data="123")
+        except Exception as e:
+            logger.error(f"Error in get_student_by_id: {str(e)}")
+            return ApiResponse(success=False, data=str(e))
+
+    # @remove_self_parameter
+    @router.post("/", response=ApiResponse[StudentDto])
+    async def create_student(self, request: HttpRequest, student: StudentDto) -> Any:
+        try:
+            student = await self.mysql_repo.find_all_async(EF)
+            # 處理創建學生邏輯
+            return ApiResponse(success=True, data=student)
+        except Exception as e:
+            logger.error(f"Error in create_student: {str(e)}")
+            return ApiResponse(success=False, data=str(e))
+
+# 直接導出 router
+__all__ = ['router']
 
 
 '''

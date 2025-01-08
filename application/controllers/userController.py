@@ -1,5 +1,4 @@
 import logging
-from drf_spectacular.utils import extend_schema
 from django.core.cache import cache
 from django.contrib.auth import authenticate
 from django.utils import timezone
@@ -19,9 +18,6 @@ from infrastructure.utils.response import ApiResponse
 class LoginAPIView(APIView):
     @api_view(['POST'])
     @permission_classes([AllowAny])
-    # @authentication_classes([JWTAuthentication])
-    # @permission_classes([IsAuthenticated])
-    @extend_schema(request=dto, methods=['POST'])
     async def post(self, request, *args, **kwargs):
         try:
             username = request.data['username']

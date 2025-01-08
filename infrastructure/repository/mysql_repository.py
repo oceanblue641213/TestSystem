@@ -1,33 +1,42 @@
-from django.db import connection
-from django.db.models import Model
+from typing import Type, TypeVar, Any
+import asyncio
 from typing import List, Optional, Type
+from django.db import models
 from domain.interfaces.imysql_repository import iMySQLRepository
+from django.db.backends.mysql.base import DatabaseWrapper
+
+T = TypeVar('T', bound=models.Model)
 
 class MySQLRepository(iMySQLRepository):
-    def __init__(self, connection):
-        self.connection = connection
+    def __init__(self, mysql_client: DatabaseWrapper):
+        self.client = mysql_client
 
-    def find_all(self, model: Type[Model]) -> List[Model]:
-        return model.objects.all()
-
-    def find_by_id(self, model: Type[Model], id: str) -> Optional[Model]:
+    async def find_by_id_async(self, model: Type[T], id: str) -> Optional[T]:
         try:
-            return model.objects.get(Id=id)
+            # 使用 asyncio.to_thread 將同步操作轉換為非同步
+            return await asyncio.to_thread(
+                lambda: model.objects.using(self.client.alias).get(id=id)
+            )
         except model.DoesNotExist:
             return None
 
-    def find_by_filter(self, model: Type[Model], **kwargs) -> List[Model]:
-        return model.objects.filter(**kwargs)
+    async def save_async(self, entity: T) -> T:
+        return await asyncio.to_thread(
+            lambda: entity.save(using=self.client.alias)
+        )
 
-    def create(self, model: Type[Model], data: dict) -> Model:
-        return model.objects.create(**data)
-
-    def update(self, instance: Model, data: dict) -> Model:
-        for key, value in data.items():
-            setattr(instance, key, value)
-        instance.save()
-        return instance
-
-    def delete(self, instance: Model) -> bool:
-        instance.delete()
+    async def delete_async(self, entity: T) -> bool:
+        await asyncio.to_thread(
+            lambda: entity.delete(using=self.client.alias)
+        )
         return True
+    
+    async def find_all_async(self, model: Type[T]) -> List[T]:
+        return await asyncio.to_thread(
+            lambda: list(model.objects.using(self.client.alias).all())
+        )
+
+    async def find_by_filter_async(self, model: Type[T], **kwargs) -> List[T]:
+        return await asyncio.to_thread(
+            lambda: list(model.objects.using(self.client.alias).filter(**kwargs))
+        )

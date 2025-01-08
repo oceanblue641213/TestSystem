@@ -16,15 +16,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from drf_spectacular.views import (
-    SpectacularAPIView,       # 生成OpenAPI schema
-    SpectacularSwaggerView,   # Swagger UI
-    SpectacularRedocView      # Redoc UI
-)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # 包含Application下所有API路由
-    path('api/', include('application.urls'))
+    path('', include('application.urls')),
 ]

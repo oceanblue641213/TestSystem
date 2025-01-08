@@ -28,6 +28,7 @@ class User(AbstractUser, BaseModel):
     
     #region Django ORM 必須的欄位映射
     class Meta:
+        app_label = 'application'  # 對應到你的 app name
         db_table = 'User'
         managed = True
 
