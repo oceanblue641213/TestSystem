@@ -1,0 +1,9 @@
+from enum import Enum
+
+class ExceptionCodeType(Enum):
+    ENTITY_NOT_FOUND = 1001
+    DUPLICATE_ENTITY = 1003
+    VALIDATION_ERROR = 2001
+    UNAUTHORIZED = 2002
+    FORBIDDEN = 2003
+    DATABASE_ERROR = 3001

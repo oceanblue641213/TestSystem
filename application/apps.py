@@ -4,6 +4,7 @@ from .config import service_registry, app_config
 from infrastructure.repository.mongodb_repository import MongoDBRepository
 from infrastructure.repository.redis_repository import RedisRepository
 from infrastructure.repository.mysql_repository import MySQLRepository
+from domain.enums.serviceEnum import ServiceType
 from .registry import auto_import_models
 
 class MyAppConfig(AppConfig):
@@ -48,8 +49,8 @@ class MyAppConfig(AppConfig):
         
         
         # 註冊服務
-        service_registry.ServiceRegistry.register("mongo", mongo_repo)
-        service_registry.ServiceRegistry.register("mysql", mysql_repo)
-        service_registry.ServiceRegistry.register("redis", redis_repo)
-        service_registry.ServiceRegistry.register("i18n", i18n_service)
+        service_registry.ServiceRegistry.register(ServiceType.MONGODB, mongo_repo)
+        service_registry.ServiceRegistry.register(ServiceType.MYSQL, mysql_repo)
+        service_registry.ServiceRegistry.register(ServiceType.REDIS, redis_repo)
+        service_registry.ServiceRegistry.register(ServiceType.I18N, i18n_service)
         

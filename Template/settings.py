@@ -179,25 +179,74 @@ logging.getLogger('pymongo.topology').setLevel(logging.WARNING)
 logging.getLogger('pymongo.connection').setLevel(logging.WARNING)
 logging.getLogger('pymongo').setLevel(logging.WARNING)
 
+LOGS_DIR = os.path.join(BASE_DIR, 'logs')
+Path(LOGS_DIR).mkdir(exist_ok=True)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
         'json': {
             '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
             'format': '%(timestamp)s %(level)s %(name)s %(message)s'
         }
     },
     'handlers': {
-        'json': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'json'
+        # 錯誤日誌 - 按大小輪換
+        'error_file': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(LOGS_DIR, 'error.log'),
+            'maxBytes': 10 * 1024 * 1024,  # 10 MB
+            'backupCount': 10,
+            'formatter': 'verbose',
+        },
+        # 應用日誌 - 按時間輪換
+        'app_file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(LOGS_DIR, 'app.log'),
+            'when': 'D',  # 每天
+            'interval': 1,
+            'backupCount': 30,
+            'formatter': 'json',
+            'encoding': 'utf-8'
+        },
+        # 調試日誌 - 按時間輪換（每小時）
+        'debug_file': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(LOGS_DIR, 'debug.log'),
+            'when': 'H',  # 每小時
+            'interval': 1,
+            'backupCount': 24,
+            'formatter': 'json',
+            'encoding': 'utf-8'
         }
     },
     'loggers': {
-        '': {
-            'handlers': ['json'],
-            'level': 'DEBUG'
+        '': {  # Root logger
+            'handlers': ['error_file'],
+            'level': 'ERROR',
+        },
+        'django': {  # Django 框架日誌
+            'handlers': ['error_file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'app': {  # 應用日誌
+            'handlers': ['app_file', 'error_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'debug': {  # 調試日誌
+            'handlers': ['debug_file'],
+            'level': 'DEBUG',
+            'propagate': False,
         }
     }
 }
