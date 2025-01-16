@@ -4,20 +4,21 @@ from domain.entities.baseModel import BaseModel
 from uuid import UUID, uuid4
 from typing import Optional
 from django.core.exceptions import ValidationError
+import domain.events.student.commandEvents as commandEvents
 
 class Student(BaseModel):
     #region ORM 欄位（Fields）
-    _id = models.UUIDField(
+    id = models.UUIDField(
         primary_key=True, 
         default=uuid.uuid4, 
         editable=False
         )
-    _name = models.CharField(
+    name = models.CharField(
         max_length=100,
         null=False,
         blank=False
         )
-    _gender = models.CharField(
+    gender = models.CharField(
         max_length=1,
         choices=[
             ('M', 'Male'),
@@ -26,18 +27,9 @@ class Student(BaseModel):
         null=False,
         blank=False
     )
-    _age = models.IntegerField(
+    age = models.IntegerField(
         null=False,
         blank=False
-        )
-    _status = models.BooleanField(
-        default=True
-        )
-    _avatarPath = models.CharField(
-        max_length=255, blank=True
-        )
-    _documentPath = models.CharField(
-        max_length=255, blank=True
         )
     
     #endregion
@@ -49,15 +41,15 @@ class Student(BaseModel):
         self.age = age
         super().__init__()
 
-    #region Domain Events
-    def TriggerUpdateName(self, new_name: str, new_age: int) -> None:
-        """更新名字的領域事件"""
-        self.name = new_name
-        self.age = new_age
-
-    def TriggerCreate(self) -> None:
+    def TriggerCreated(self, event: commandEvents.StudentCreated) -> None:
         """創建學生的領域事件"""
         pass
+
+    #region Domain Events
+    def TriggerUpdated(self, event: commandEvents.StudentUpdated) -> None:
+        """更新名字的領域事件"""
+        self.name = event.name
+        self.age = event.age
     
     #endregion
     
@@ -82,7 +74,7 @@ class Student(BaseModel):
     #endregion
     
     class Meta:
-        app_label = 'application'  # 對應到你的 app name
+        app_label = 'domain'  # 對應到你的 app name
         db_table = 'Student'
         managed = True
         ordering = ['-create_date']  # 預設排序
@@ -94,6 +86,6 @@ class Student(BaseModel):
     #endregion
 
 # 創建模型後
-# python manage.py makemigrations
-# python manage.py migrate
+# python manage.py makemigrations domain
+# python manage.py migrate domain
 # 來創建數據庫表

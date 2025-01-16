@@ -5,4 +5,4 @@ from ninja import Schema
 class StudentDto(Schema):
     name: str = field(default="")
     age: int = field(default=0)
-    email: str = field(default="")
+    gender: str = field(default="M")

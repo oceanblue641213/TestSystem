@@ -45,7 +45,7 @@ SECRET_KEY = 'django-insecure-s&%9yc_lacjy*1hl(#pzyhbf&s)1=1(6-ld0jm571rcj(p)@^p
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -102,10 +102,18 @@ ASGI_APPLICATION = 'Template.asgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': dj_database_url.parse(
-        mysql_url,
-        conn_max_age=600
-    )
+    # 'default': dj_database_url.parse(
+    #     mysql_url,
+    #     conn_max_age=600
+    # )
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'test',
+        'USER': 'root',
+        'PASSWORD': '12345678',
+        'HOST': 'localhost',
+        'PORT': '3306',
+    }
 }
 
 

@@ -1,5 +1,6 @@
 from typing import Type, TypeVar, Any
 import asyncio
+import logging
 from typing import List, Optional, Type
 from django.db import models
 from domain.interfaces.imysql_repository import iMySQLRepository
@@ -10,6 +11,7 @@ T = TypeVar('T', bound=models.Model)
 class MySQLRepository(iMySQLRepository):
     def __init__(self, mysql_client: DatabaseWrapper):
         self.client = mysql_client
+        self.logger = logging.getLogger('infrastructure')
 
     async def find_by_id_async(self, model: Type[T], id: str) -> Optional[T]:
         try:
