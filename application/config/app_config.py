@@ -14,7 +14,6 @@ from django.db import connection
 # logger = logging.getLogger(__name__)
 
 load_dotenv()
-mysql_url = os.getenv("MYSQL_URL")
 mongodb_url = os.getenv("MONGODB_URL")
 redis_host = os.getenv("REDIS_HOST")
 redis_port = os.getenv("REDIS_PORT")
@@ -99,7 +98,7 @@ class ServiceConfig:
                 raise
             
         return self.i18n_client
-        #mysql_url
+        
     @lru_cache
     def get_mysql_client(self):
         try:

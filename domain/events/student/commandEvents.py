@@ -1,19 +1,19 @@
+from uuid import UUID
 from dataclasses import dataclass, field
+from domain.events.baseEvent import BaseEvent
 
-class StudentCreated:
-    def __init__(self, name: str, gender: str, age: int):
-        self.name = name
-        self.gender = gender
-        self.age = age
-    
+@dataclass
+class StudentCreated():
     name: str
     age: int
-    email: str
+    gender: str
 
-class StudentUpdated:
+@dataclass
+class StudentUpdated():
     name: str
     age: int
-    email: str
+    gender: str
 
-class StudentDeleted:
-    pass
+@dataclass
+class StudentDeleted():
+    student_id: UUID

@@ -38,12 +38,47 @@ class StudentController:
     @router.post("/", response=ApiResponse[StudentDto])
     async def create_student(request: HttpRequest, student: StudentDto) -> Any:
         try:
-            await StudentController.command.Create_Student(student)
+            created_student = await StudentController.command.Create_Student(student)
             
-            return ApiResponse(success=True, data=student)
+            return ApiResponse(success=True, data=created_student)
         except Exception as e:
-            print(f"Error in create_student: {str(e)}")
-            return ApiResponse(success=False, data=str(e))
+            # 建議使用logger而不是print
+            logger.error(f"Error in create_student: {str(e)}")
+            # 建議返回更具體的錯誤訊息
+            return ApiResponse(success=False, error=str(e))
+    
+    @router.put("/{student_id}", response=ApiResponse[StudentDto])
+    async def update_student(request: HttpRequest, student_id: str, data: StudentDto) -> ApiResponse:
+        try:
+            updated_student = await StudentController.command.Update_Student(student_id, data)
+            if not updated_student:
+                return ApiResponse(
+                    success=False,
+                    error="Student not found"
+                )
+            return ApiResponse(
+                success=True,
+                data=updated_student
+            )
+        except Exception as e:
+            return ApiResponse(
+                success=False,
+                error=str(e)
+            )
+
+    @router.delete("/{student_id}", response=ApiResponse[bool])
+    async def delete_student(request: HttpRequest, student_id: str) -> ApiResponse:
+        try:
+            result = await StudentController.command.Delete_Student(student_id)
+            return ApiResponse(
+                success=result,
+                message="Student deleted successfully" if result else "Student not found"
+            )
+        except Exception as e:
+            return ApiResponse(
+                success=False,
+                error=str(e)
+            )
 
 # 直接導出 router
 __all__ = ['router']

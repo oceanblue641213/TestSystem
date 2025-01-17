@@ -28,3 +28,15 @@ class EntityNotFoundException(BaseException):
             message=f"{entity} with id {identifier} not found",
             code=404
         )
+
+class RepositoryError(Exception):
+    """Base class for repository exceptions."""
+    pass
+
+class EntityNotFoundError(RepositoryError):
+    """Raised when entity is not found."""
+    pass
+
+class SaveEntityError(RepositoryError):
+    """Raised when saving entity fails."""
+    pass

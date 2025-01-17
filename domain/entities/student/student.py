@@ -35,26 +35,27 @@ class Student(BaseModel):
     #endregion
     
     def __init__(self, name: str, gender: str, age: int, id: Optional[UUID] = None):
+        """新增的領域事件"""
         self.id = id or uuid4()
         self.name = name
         self.gender = gender
         self.age = age
         super().__init__()
-
-    def TriggerCreated(self, event: commandEvents.StudentCreated) -> None:
-        """創建學生的領域事件"""
-        pass
-
     #region Domain Events
     def TriggerUpdated(self, event: commandEvents.StudentUpdated) -> None:
-        """更新名字的領域事件"""
+        """更新的領域事件"""
         self.name = event.name
         self.age = event.age
+        self.gender = event.gender
+    
+    def TriggerDeleted(self, event: commandEvents.StudentDeleted) -> None:
+        """刪除的領域事件"""
+        self.is_deleted = True
     
     #endregion
     
     #region 驗證事件
-    def _validate_CREATE(self, *args, **kwargs) -> bool:
+    def _validate_create(self, *args, **kwargs) -> bool:
         """創建時的驗證"""
         if not self.gender in ['M', 'F']:
             raise ValidationError("性別必須是 M 或 F")

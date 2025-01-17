@@ -22,7 +22,6 @@ load_dotenv()
 
 # 初始化 django-environ
 env = environ.Env()
-mysql_url = os.getenv("MYSQL_URL")
 
 django_env = os.getenv('DJANGO_ENV', 'development')  # 默認為 'development'
 # 根據 DJANGO_ENV 加載不同的 .env 檔案
@@ -102,10 +101,6 @@ ASGI_APPLICATION = 'Template.asgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    # 'default': dj_database_url.parse(
-    #     mysql_url,
-    #     conn_max_age=600
-    # )
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'test',
