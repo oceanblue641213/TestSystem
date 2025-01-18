@@ -4,8 +4,6 @@ from django.http import HttpRequest
 from domain.dtos.studentDto import StudentDto
 from typing import Any
 from application.schemas import ApiResponse
-from ninja.security import HttpBearer
-from application.auth.jwt_auth import JWTAuth
 from application.core.di.container import Container
 
 router = Router(tags=["students"])
@@ -17,7 +15,7 @@ class StudentController:
     command = Container.resolve('StudentCommand')
     query = Container.resolve('StudentQuery')
         
-    @router.get("/", summary="Get all students", response=ApiResponse[str])
+    @router.get("/", response=ApiResponse[str], summary="Get all students")
     async def get_student(request: HttpRequest) -> Any:
         try:
             # 假設 mysql_repo 已經支援非同步操作
@@ -26,39 +24,40 @@ class StudentController:
             logger.error(f"Error in get_students: {str(e)}")
             return ApiResponse(success=False, data=str(e))
 
-    @router.get("/{student_id}", summary="Get student by ID", auth=JWTAuth())
+    # @router.get("/{student_id}", summary="Get student by ID", auth=JWTAuth())
+    @router.get("/{student_id}", response=ApiResponse[StudentDto], summary="Get student by ID")
     async def get_student_by_id(request: HttpRequest, student_id: str) -> Any:
         try:
-            
-            return ApiResponse(success=True, data="123")
+            result = await StudentController.query.Get_Specific_Student(student_id)
+            return ApiResponse(success=True, data=result)
         except Exception as e:
             logger.error(f"Error in get_student_by_id: {str(e)}")
             return ApiResponse(success=False, data=str(e))
 
-    @router.post("/", response=ApiResponse[StudentDto])
+    @router.post("/", response=ApiResponse[StudentDto], summary="Create student")
     async def create_student(request: HttpRequest, student: StudentDto) -> Any:
         try:
-            created_student = await StudentController.command.Create_Student(student)
+            result = await StudentController.command.Create_Student(student)
             
-            return ApiResponse(success=True, data=created_student)
+            return ApiResponse(success=True, data=result)
         except Exception as e:
-            # 建議使用logger而不是print
             logger.error(f"Error in create_student: {str(e)}")
-            # 建議返回更具體的錯誤訊息
             return ApiResponse(success=False, error=str(e))
     
-    @router.put("/{student_id}", response=ApiResponse[StudentDto])
+    @router.put("/{student_id}", response=ApiResponse[StudentDto], summary="Update student")
     async def update_student(request: HttpRequest, student_id: str, data: StudentDto) -> ApiResponse:
         try:
-            updated_student = await StudentController.command.Update_Student(student_id, data)
-            if not updated_student:
+            result = await StudentController.command.Update_Student(student_id, data)
+            if not result:
                 return ApiResponse(
                     success=False,
-                    error="Student not found"
+                    error="not found"
                 )
+            
             return ApiResponse(
                 success=True,
-                data=updated_student
+                data=result,
+                message="updated successfully"
             )
         except Exception as e:
             return ApiResponse(
@@ -66,13 +65,19 @@ class StudentController:
                 error=str(e)
             )
 
-    @router.delete("/{student_id}", response=ApiResponse[bool])
+    @router.delete("/{student_id}", response=ApiResponse[bool], summary="Delete student by ID")
     async def delete_student(request: HttpRequest, student_id: str) -> ApiResponse:
         try:
             result = await StudentController.command.Delete_Student(student_id)
+            if not result:
+                return ApiResponse(
+                    success=False,
+                    error="not found"
+                )
+            
             return ApiResponse(
-                success=result,
-                message="Student deleted successfully" if result else "Student not found"
+                success=True,
+                message="deleted successfully"
             )
         except Exception as e:
             return ApiResponse(

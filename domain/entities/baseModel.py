@@ -1,7 +1,7 @@
 from django.db import models
-from typing import Callable, Any
 from functools import wraps
 from domain.enums.validationEventEnum import ValidationEvent
+from django.utils import timezone
 
 # 通用模型基類的元類
 class ValidationModelMeta(type(models.Model)):
@@ -27,45 +27,70 @@ class BaseModel(models.Model, metaclass=ValidationModelMeta):
     基礎模型，提供通用的欄位和方法
     """
     create_date = models.DateTimeField(
-        auto_now_add=True,
+        default=timezone.now,  # 改用 timezone.now
         null=False,
-        blank=False)
+        blank=False,
+        editable=False
+    )
     updated_date = models.DateTimeField(
-        auto_now=True,
         null=True,
-        blank=True)
+        blank=True,
+        editable=False
+    )
     create_user_id = models.IntegerField(
         null=True,
-        blank=True)
+        blank=True
+    )
+    is_deleted = models.BooleanField(
+        default=False
+    )
 
     def _get_event_type(self, method_name):
         # 根據方法名稱推斷事件類型
         if method_name.startswith('TriggerCreate'):
-            return ValidationEvent.CREATE
+            return ValidationEvent.CREATE.value
         elif method_name.startswith('TriggerUpdate'):
-            return ValidationEvent.UPDATE
+            return ValidationEvent.UPDATE.value
         elif method_name.startswith('TriggerDelete'):
-            return ValidationEvent.DELETE
+            return ValidationEvent.DELETE.value
         else:
             raise ValueError(f"未知 method type: {method_name}")
 
 # 基礎驗證裝飾器
 def validate_event(func):
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        # 確定當前觸發的事件類型
-        event_type = self._get_event_type(func.__name__)
+    if isinstance(func, classmethod):
+        orig_func = func.__get__(None, object).__func__
         
-        # 執行驗證
-        validation_method = getattr(self, f'_validate_{event_type}', None)
-        if validation_method:
-            validation_result = validation_method(*args, **kwargs)
-            if validation_result is False:
-                raise ValueError(f"Validation failed for event: {event_type}")
-        
-        # 執行原始方法
-        return func(self, *args, **kwargs)
-    return wrapper
+        @wraps(orig_func)
+        def wrapper(cls, event, *args, **kwargs):
+            # 獲取事件類型
+            event_type = orig_func.__name__[7:].lower()
+            
+            # 獲取驗證方法
+            validate_method = getattr(cls, f'_validate_{event_type}', None)
+            if validate_method:
+                event_dict = event.__dict__ if hasattr(event, '__dict__') else {}
+                if not validate_method(**event_dict):
+                    raise ValueError(f"Validation failed for {event_type}")
+            
+            return orig_func(cls, event, *args, **kwargs)
+            
+        return classmethod(wrapper)
+    else:
+        @wraps(func)
+        def wrapper(self, event, *args, **kwargs):
+            # 獲取事件類型
+            event_type = func.__name__[7:].lower()
+            
+            # 獲取驗證方法
+            validate_method = getattr(self.__class__, f'_validate_{event_type}', None)
+            if validate_method:
+                event_dict = event.__dict__ if hasattr(event, '__dict__') else {}
+                if not validate_method(**event_dict):
+                    raise ValueError(f"Validation failed for {event_type}")
+            
+            return func(self, event, *args, **kwargs)
+        return wrapper
 
 # field = models.FieldType(
 #     null=False,          # 是否允許資料庫中的值為 NULL

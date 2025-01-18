@@ -7,6 +7,10 @@ from domain.interfaces.imysql_repository import iMySQLRepository
 from django.db.backends.mysql.base import DatabaseWrapper
 from django.db import transaction
 import domain.exceptions.exceptions as exceptions
+from django.db import transaction
+from asgiref.sync import sync_to_async
+from django.utils import timezone
+from uuid import UUID
 
 T = TypeVar('T', bound=models.Model)
 
@@ -17,9 +21,15 @@ class MySQLRepository(iMySQLRepository):
 
     async def find_by_id_async(self, model: Type[T], id: str) -> Optional[T]:
         try:
+            # 將字符串 id 轉換為 UUID
+            uuid_id = UUID(id)
+            
             return await asyncio.to_thread(
-                lambda: model.objects.using(self.client.alias).get(id=id)
+                lambda: model.objects.using(self.client.alias).get(id=uuid_id)
             )
+        except ValueError:
+            # UUID 格式無效
+            raise exceptions.RepositoryError(f"Invalid UUID format: {id}")
         except model.DoesNotExist:
             return None
         except Exception as e:
@@ -28,9 +38,29 @@ class MySQLRepository(iMySQLRepository):
 
     async def save_async(self, entity: T) -> T:
         try:
-            async with transaction.atomic():
-                saved_entity = await asyncio.to_thread(entity.save)
-                return saved_entity
+            # 將整個事務操作包裝成同步函數
+            @sync_to_async
+            def save_with_transaction():
+                with transaction.atomic():
+                    # 檢查是否為新實體（改用 _state.adding）
+                    is_new = entity._state.adding
+                    
+                    # 取得台北時區
+                    current_time = timezone.now()
+                    
+                    if is_new:
+                        entity.create_date = current_time
+                        entity.updated_date = None
+                    else:
+                        entity.updated_date = current_time
+                    entity.save()
+                    
+                    return entity
+            
+            # 執行事務
+            saved_entity = await save_with_transaction()
+            return saved_entity
+            
         except Exception as e:
             self.logger.error(f"Error saving entity: {str(e)}")
             raise

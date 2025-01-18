@@ -8,15 +8,15 @@ import domain.exceptions.exceptions as exceptions
 
 class StudentCommand:
     def __init__(self):
-        self.mysql_repo = Container.resolve(ServiceType.MYSQL)
+        self.mysql_repo = Container.resolve(ServiceType.MYSQL.value)
         self.logger = logging.getLogger('infrastructure')
     
     async def Create_Student(self, data: StudentDto) -> Student:
-        entity = Student(data.name, data.gender, data.age)
+        event = StudentCreated(data.name, data.age, data.gender)
+        entity = Student.TriggerCreated(event)
     
         # 儲存並返回結果
-        saved_student = await self.mysql_repo.save_async(entity)
-        return saved_student
+        return await self.mysql_repo.save_async(entity)
     
     async def Update_Student(self, id: str, data: StudentDto) -> Student:
         try:
@@ -26,7 +26,7 @@ class StudentCommand:
                 raise exceptions.EntityNotFoundError(f"Student with id {id} not found")
             
             # 觸發領域事件
-            event = StudentUpdated(data.name, data.gender, data.age)
+            event = StudentUpdated(data.name, data.age, data.gender)
             entity.TriggerUpdated(event)
             
             # 儲存並返回更新後的實體

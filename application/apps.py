@@ -39,7 +39,7 @@ class MyAppConfig(AppConfig):
         mysql_client = config.get_mysql_client()
         
         # 初始化 MongoDB
-        mongo_client = config.get_mongo_client()
+        # mongo_client = config.get_mongo_client()
         
         # 初始化 Redis
         # redis_client = config.get_redis_client()
@@ -49,13 +49,13 @@ class MyAppConfig(AppConfig):
         
         # 註冊服務
         mysql_repo = MySQLRepository(mysql_client)
-        mongo_repo = MongoDBRepository(mongo_client)
+        # mongo_repo = MongoDBRepository(mongo_client)
         # redis_repo = RedisRepository(redis_client)
         
         
         # 註冊服務
         service_registry.ServiceRegistry.register(ServiceType.MYSQL, mysql_repo)
-        service_registry.ServiceRegistry.register(ServiceType.MONGODB, mongo_repo)
+        # service_registry.ServiceRegistry.register(ServiceType.MONGODB, mongo_repo)
         # service_registry.ServiceRegistry.register(ServiceType.REDIS, redis_repo)
         # service_registry.ServiceRegistry.register(ServiceType.I18N, i18n_service)
         

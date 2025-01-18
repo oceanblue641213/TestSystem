@@ -1,8 +1,6 @@
 import uuid
 from django.db import models
-from domain.entities.baseModel import BaseModel
-from uuid import UUID, uuid4
-from typing import Optional
+from domain.entities.baseModel import BaseModel, validate_event
 from django.core.exceptions import ValidationError
 import domain.events.student.commandEvents as commandEvents
 
@@ -34,13 +32,20 @@ class Student(BaseModel):
     
     #endregion
     
-    def __init__(self, name: str, gender: str, age: int, id: Optional[UUID] = None):
-        """新增的領域事件"""
-        self.id = id or uuid4()
-        self.name = name
-        self.gender = gender
-        self.age = age
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    
+    @classmethod
+    @validate_event
+    def TriggerCreated(cls, event: commandEvents.StudentCreated) -> 'Student':
+        """創建新的 Student 實體"""
+        instance = cls()
+        instance.name = event.name
+        instance.gender = event.gender
+        instance.age = event.age
+            
+        return instance
+    
     #region Domain Events
     def TriggerUpdated(self, event: commandEvents.StudentUpdated) -> None:
         """更新的領域事件"""
@@ -55,21 +60,26 @@ class Student(BaseModel):
     #endregion
     
     #region 驗證事件
-    def _validate_create(self, *args, **kwargs) -> bool:
+    @staticmethod
+    def _validate_created(name: str, gender: str, age: int, **kwargs) -> bool:
         """創建時的驗證"""
-        if not self.gender in ['M', 'F']:
+        if not gender in ['M', 'F']:
             raise ValidationError("性別必須是 M 或 F")
-        if self.age < 0 or self.age > 150:
+        if age < 0 or age > 150:
             raise ValidationError("年齡必須在 0-150 之間")
-        if not self.name or len(self.name.strip()) == 0:
+        if not name or len(name.strip()) == 0:
             raise ValidationError("名字不能為空")
         return True
-    
-    def _validate_update(self, **kwargs) -> bool:
-        # 更新學生的特定驗證邏輯
-        if 'name' in kwargs and len(kwargs['name']) < 3:
-            print("name too short")
-            return False
+
+    @staticmethod
+    def _validate_updated(name: str, gender: str, age: int, **kwargs) -> bool:
+        """更新時的驗證"""
+        if not gender in ['M', 'F']:
+            raise ValidationError("性別必須是 M 或 F")
+        if age < 0 or age > 150:
+            raise ValidationError("年齡必須在 0-150 之間")
+        if not name or len(name.strip()) == 0:
+            raise ValidationError("名字不能為空")
         return True
 
     #endregion

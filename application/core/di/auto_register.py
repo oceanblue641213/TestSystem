@@ -3,6 +3,7 @@ import importlib
 from pathlib import Path
 from django.apps import apps
 from .container import Container
+from domain.enums.cqrsEnum import CQRSType
 
 def auto_register_services():
     # 1. 初始化核心服務（數據庫連接等）
@@ -36,9 +37,9 @@ def register_modules_in_directory(base_dir: Path, module_type: str):
             try:
                 module = importlib.import_module(module_path)
                 
-                # 檢查模組中的所有屬性
+                # 檢查模組中的所有屬性 module_type.capitalize()[:-1]
                 for attr_name in dir(module):
-                    if attr_name.endswith(module_type.capitalize()[:-1]):  # Command 或 Query
+                    if attr_name.endswith(CQRSType.COMMAND.value) or attr_name.endswith(CQRSType.QUERY.value):  
                         service_class = getattr(module, attr_name)
                         service_instance = service_class()
                         Container.register(attr_name, service_instance)

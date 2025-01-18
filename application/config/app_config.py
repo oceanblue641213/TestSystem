@@ -2,7 +2,6 @@ import os
 from typing import Optional
 from functools import lru_cache
 import redis
-import logging
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from dotenv import load_dotenv
@@ -10,8 +9,6 @@ from infrastructure.services.i18nService import I18nService
 from infrastructure.services.mysqlService import MySQLService
 from infrastructure.services.mongodbService import MongoDBService
 from django.db import connection
-
-# logger = logging.getLogger(__name__)
 
 load_dotenv()
 mongodb_url = os.getenv("MONGODB_URL")
@@ -111,28 +108,21 @@ class ServiceConfig:
             raise
         
         return connection
-    
-    def get_mongo_database(self, db_name: str = None):
-        """
-        獲取指定的MongoDB數據庫實例
-        """
-        client = self.get_mongo_client()
-        return client[db_name]
 
     def cleanup(self):
         """清理所有資源"""
-        if self.mongo_service:
-            self.mongo_service.close()
+        # if self.mongo_service:
+        #     self.mongo_service.close()
         if self.mysql_service:
             self.mysql_service.close()
 
     def check_connections(self):
         """檢查所有連線狀態"""
-        mongo_ok = self.mongo_service.check_connection()
+        # mongo_ok = self.mongo_service.check_connection()
         mysql_ok = self.mysql_service.check_connection()
         
         # 如果有連線斷開，嘗試重新連線
-        if not mongo_ok:
-            self.mongo_service.reconnect()
+        # if not mongo_ok:
+        #     self.mongo_service.reconnect()
         if not mysql_ok:
             self.mysql_service.reconnect()

@@ -1,13 +1,12 @@
 import logging
 from domain.entities.student.student import Student
-import domain.dtos.studentDto as dto
-from application.config.service_registry import ServiceRegistry
 from domain.enums.serviceEnum import ServiceType
+from application.core.di.container import Container
 from application.schemas import ApiResponse
 
 class StudentQuery:
     def __init__(self):
-        self.mysql_repo = ServiceRegistry.get_service(ServiceType.MYSQL)
+        self.mysql_repo = Container.resolve(ServiceType.MYSQL.value)
         self.logger = logging.getLogger('infrastructure')
         
     async def Get_Specific_Student(self, student_id: str) -> Student:

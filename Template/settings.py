@@ -108,6 +108,10 @@ DATABASES = {
         'PASSWORD': '12345678',
         'HOST': 'localhost',
         'PORT': '3306',
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            'init_command': "SET time_zone = '+08:00'",
+        }
     }
 }
 
@@ -136,11 +140,11 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
-
-USE_I18N = True
+TIME_ZONE = 'Asia/Taipei'
 
 USE_TZ = True
+
+USE_I18N = True
 
 
 # Static files (CSS, JavaScript, Images)
