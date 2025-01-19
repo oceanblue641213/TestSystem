@@ -32,8 +32,8 @@ class Container:
         
         # 初始化核心服務
         mysql_client = config.get_mysql_client()
+        redis_client = config.get_redis_client()
         # mongo_client = config.get_mongo_client()
-        # redis_client = config.get_redis_client()
         # i18n_service = config.get_i18n_client()
         
         # 創建 repositories
@@ -41,9 +41,11 @@ class Container:
         # mongo_repo = MongoDBRepository(mongo_client)
         
         # 註冊到 ServiceRegistry
-        ServiceRegistry.register(ServiceType.MYSQL, mysql_repo)
+        ServiceRegistry.register(ServiceType.MYSQL.value, mysql_repo)
+        ServiceRegistry.register(ServiceType.REDIS.value, redis_client)
         # ServiceRegistry.register(ServiceType.MONGODB, mongo_repo)
         
         # 同時也註冊到容器（用於新的依賴注入機制）
-        cls.register('mysql', mysql_repo)
+        cls.register(ServiceType.MYSQL.value, mysql_repo)
+        cls.register(ServiceType.REDIS.value, redis_client)
         # cls.register('mongo', mongo_repo)

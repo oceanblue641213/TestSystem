@@ -1,10 +1,11 @@
 import logging
 from ninja import Router
 from django.http import HttpRequest
-from domain.dtos.studentDto import StudentDto
-from typing import Any
-from application.schemas import ApiResponse
+from domain.dtos.studentDto import StudentDto, StudentDto2
+from typing import Any, List
+from application.schemas import ApiResponse, TableApiResponse
 from application.core.di.container import Container
+from domain.dtos.sortDto import SortDto
 
 router = Router(tags=["students"])
 logger = logging.getLogger('application')
@@ -15,14 +16,14 @@ class StudentController:
     command = Container.resolve('StudentCommand')
     query = Container.resolve('StudentQuery')
         
-    @router.get("/", response=ApiResponse[str], summary="Get all students")
-    async def get_student(request: HttpRequest) -> Any:
+    @router.post("/list", response=TableApiResponse[List[StudentDto2]], summary="Get all students")
+    async def get_student(request: HttpRequest, sort_dto: SortDto) -> Any:
         try:
-            # 假設 mysql_repo 已經支援非同步操作
-            return ApiResponse(success=True, data="123")
+            result = await StudentController.query.Get_All_Student(sort_dto, StudentDto2)
+            return TableApiResponse(success=True, data=result, total = len(result))
         except Exception as e:
             logger.error(f"Error in get_students: {str(e)}")
-            return ApiResponse(success=False, data=str(e))
+            return TableApiResponse(success=False, data=str(e))
 
     # @router.get("/{student_id}", summary="Get student by ID", auth=JWTAuth())
     @router.get("/{student_id}", response=ApiResponse[StudentDto], summary="Get student by ID")
@@ -34,7 +35,7 @@ class StudentController:
             logger.error(f"Error in get_student_by_id: {str(e)}")
             return ApiResponse(success=False, data=str(e))
 
-    @router.post("/", response=ApiResponse[StudentDto], summary="Create student")
+    @router.post("/", response=ApiResponse[StudentDto2], summary="Create student")
     async def create_student(request: HttpRequest, student: StudentDto) -> Any:
         try:
             result = await StudentController.command.Create_Student(student)

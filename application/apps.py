@@ -13,7 +13,6 @@ class MyAppConfig(AppConfig):
     name = 'application'
 
     def ready(self):
-        print("MyAppConfig.ready() called")  # 添加日誌
         # 導入 signals
         from . import signals
         
@@ -22,40 +21,10 @@ class MyAppConfig(AppConfig):
         
         # 使用環境變量來控制
         DJANGO_ENV = os.environ.get('DJANGO_ENV', 'development')
-        print(f"Current environment: {DJANGO_ENV}")  # 添加日誌
         if DJANGO_ENV == 'development':
             # 只在開發環境執行
             from application.controllers import discover_apis
             discover_apis()
-            print("APIs discovered and registered")  # 添加日誌
         
         auto_import_models()
-
-    def initialize_services(self):
-        # 獲取配置單例
-        config = app_config.ServiceConfig.get_instance()
-        
-        # 初始化 MySQL
-        mysql_client = config.get_mysql_client()
-        
-        # 初始化 MongoDB
-        # mongo_client = config.get_mongo_client()
-        
-        # 初始化 Redis
-        # redis_client = config.get_redis_client()
-        
-        # 初始化 I18n 服務
-        # i18n_service = config.get_i18n_client()
-        
-        # 註冊服務
-        mysql_repo = MySQLRepository(mysql_client)
-        # mongo_repo = MongoDBRepository(mongo_client)
-        # redis_repo = RedisRepository(redis_client)
-        
-        
-        # 註冊服務
-        service_registry.ServiceRegistry.register(ServiceType.MYSQL, mysql_repo)
-        # service_registry.ServiceRegistry.register(ServiceType.MONGODB, mongo_repo)
-        # service_registry.ServiceRegistry.register(ServiceType.REDIS, redis_repo)
-        # service_registry.ServiceRegistry.register(ServiceType.I18N, i18n_service)
         

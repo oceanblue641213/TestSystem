@@ -1,6 +1,4 @@
-from uuid import UUID
-from dataclasses import dataclass, field
-from domain.events.baseEvent import BaseEvent
+from dataclasses import dataclass
 
 @dataclass
 class StudentCreated():
@@ -16,4 +14,4 @@ class StudentUpdated():
 
 @dataclass
 class StudentDeleted():
-    student_id: UUID
+    pass

@@ -18,3 +18,7 @@ class ApiResponse(BaseResponseModel, Generic[T]):
     message: Optional[str] = None  # 用於一般訊息
     error: Optional[str] = None    # 專門用於錯誤訊息
     data: Optional[T] = None
+
+class TableApiResponse(ApiResponse):
+    total: int  # 加入總筆數
+    # current_page: int  # 加入當前頁碼

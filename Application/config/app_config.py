@@ -102,7 +102,6 @@ class ServiceConfig:
             # 測試連線
             self.mysql_service = MySQLService()
             self.mysql_service.connect()
-            print("MySQL connection successful")
         except Exception as e:
             print(f"Error connecting to MySQL: {e}")
             raise

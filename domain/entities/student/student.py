@@ -35,10 +35,11 @@ class Student(BaseModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
     
+    #region Domain Events
     @classmethod
     @validate_event
     def TriggerCreated(cls, event: commandEvents.StudentCreated) -> 'Student':
-        """創建新的 Student 實體"""
+        """創建新的實體"""
         instance = cls()
         instance.name = event.name
         instance.gender = event.gender
@@ -46,7 +47,6 @@ class Student(BaseModel):
             
         return instance
     
-    #region Domain Events
     def TriggerUpdated(self, event: commandEvents.StudentUpdated) -> None:
         """更新的領域事件"""
         self.name = event.name
